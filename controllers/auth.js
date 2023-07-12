@@ -26,7 +26,7 @@ exports.signup = async (request, response) => {
     }
 
     // Create user object
-    const user = User.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
@@ -38,5 +38,11 @@ exports.signup = async (request, response) => {
       success: true,
       message: "Account successfully created.",
     });
-  } catch (e) {}
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
