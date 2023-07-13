@@ -16,3 +16,7 @@ app.use("/api/v1/", user);
 app.listen(PORT, () => {
   console.log(`Server started at ${PORT}`);
 });
+
+app.get("/", (req, res) => {
+  res.send("<h1>Hello</h1>");
+});

@@ -1,5 +1,8 @@
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+require("dotenv").config();
 
 exports.signup = async (request, response) => {
   try {
@@ -38,6 +41,70 @@ exports.signup = async (request, response) => {
       success: true,
       message: "Account successfully created.",
     });
+  } catch (err) {
+    console.log(err);
+    response.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.login = async (request, response) => {
+  try {
+    const { email, password } = request.body;
+
+    //Validation
+    if (!email || !password) {
+      return response.status(400).json({
+        success: false,
+        message: "Empty Field",
+      });
+    }
+
+    // Find the account
+    const user = await User.findOne({ email });
+    if (!user) {
+      return response.status(401).json({
+        success: false,
+        message: "Account not found",
+      });
+    }
+
+    // create a token and check the password
+    const payload = {
+      email: user.email,
+      id: user._id,
+      role: user.role,
+    };
+
+    if (await bcrypt.compare(password, user.password)) {
+      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: "2h",
+      });
+
+      user.toObject();
+      user.token = token;
+      user.password = undefined;
+
+      // Send the response with cookie
+      const option = {
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+      };
+
+      response.cookie("auth", token, option).status(200).json({
+        success: true,
+        user,
+        token,
+        message: "User Logged In",
+      });
+    } else {
+      return response.status(402).json({
+        success: false,
+        message: "Incorrect Password",
+      });
+    }
   } catch (err) {
     console.log(err);
     response.status(500).json({
