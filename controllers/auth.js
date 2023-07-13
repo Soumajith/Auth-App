@@ -63,7 +63,7 @@ exports.login = async (request, response) => {
     }
 
     // Find the account
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
     if (!user) {
       return response.status(401).json({
         success: false,
@@ -79,11 +79,11 @@ exports.login = async (request, response) => {
     };
 
     if (await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      let token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: "2h",
       });
 
-      user.toObject();
+      user = user.toObject();
       user.token = token;
       user.password = undefined;
 
